@@ -1,18 +1,31 @@
 // maked by rafael rocha
 
 const app = {
-    // Lista de ícones disponíveis para o admin
+    // Ícones FOCADOS EM BARBEARIA (Versão Gratuita FontAwesome)
     availableIcons: [
-        'fa-scissors', 'fa-face-smile', 'fa-user-tie', 'fa-eye', 'fa-spray-can',
-        'fa-mask', 'fa-hand-sparkles', 'fa-bolt', 'fa-star', 'fa-crown',
-        'fa-wand-magic-sparkles', 'fa-fire', 'fa-gem', 'fa-feather', 'fa-circle-check'
+        'fa-scissors',          // Corte / Tesoura
+        'fa-user-tie',          // Barba / Visual Social
+        'fa-pump-soap',         // Lavagem / Shampoo / Creme
+        'fa-spray-can',         // Pigmentação / Laquê
+        'fa-wind',              // Secador / Escova
+        'fa-fire',              // Toalha Quente / Cera Quente
+        'fa-brush',             // Pincel / Tintura
+        'fa-bottle-droplet',    // Óleo de Barba / Minoxidil
+        'fa-mask',              // Sobrancelha / Limpeza de Pele
+        'fa-wand-magic-sparkles', // Tratamento Especial / Platinado
+        'fa-bolt',              // Desenho / Risquinho
+        'fa-crown',             // Dia do Noivo / VIP
+        'fa-droplet',           // Hidratação
+        'fa-star',              // Especial
+        'fa-check'              // Básico
     ],
 
+    // Serviços Padrão com ícones atualizados
     defaultServices: [
         { id: 1, name: 'Corte de Cabelo', price: 30, icon: 'fa-scissors' },
-        { id: 2, name: 'Barba Terapia', price: 30, icon: 'fa-face-smile' },
+        { id: 2, name: 'Barba Terapia', price: 30, icon: 'fa-fire' }, // Toalha quente
         { id: 3, name: 'Cabelo + Barba', price: 55, icon: 'fa-user-tie' },
-        { id: 4, name: 'Sobrancelha', price: 10, icon: 'fa-eye' },
+        { id: 4, name: 'Sobrancelha', price: 10, icon: 'fa-mask' },
         { id: 5, name: 'Pigmentação', price: 45, icon: 'fa-spray-can' }
     ],
 
@@ -24,7 +37,7 @@ const app = {
         theme: 'light',
         userBookingId: null,
         isAdminLoggedIn: false,
-        editingServiceIndex: null // Para saber qual serviço está mudando de ícone
+        editingServiceIndex: null
     },
 
     init: function() {
@@ -45,13 +58,17 @@ const app = {
         this.updateAdminButton();
     },
 
+    // --- PROTEÇÃO REFORÇADA ---
     initProtection: function() {
+        // Bloqueia botão direito
         document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Bloqueia atalhos de desenvolvedor
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false;
-            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false;
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-        }
+            if(e.keyCode == 123) return false; // F12
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) return false; // I, J, C
+            if(e.ctrlKey && e.keyCode == 85) return false; // U
+        };
     },
 
     toggleTheme: function() {
@@ -346,8 +363,6 @@ const app = {
         });
     },
 
-    // --- NOVA LOGICA DE ICONES ---
-    
     renderAdminServices: function(container) {
         this.state.services.forEach((s, idx) => {
             const item = document.createElement('div');
@@ -355,11 +370,9 @@ const app = {
             item.innerHTML = `
                 <div style="margin-bottom:10px; font-weight:600;">${s.name}</div>
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <!-- Botão de Ícone -->
                     <button class="btn-icon-select" onclick="app.openIconSelector(${idx})">
                         <i class="fa-solid ${s.icon || 'fa-cut'}"></i>
                     </button>
-                    
                     <input type="text" value="${s.name}" id="edit-name-${idx}" class="input-field" style="margin:0;">
                     <input type="number" value="${s.price}" id="edit-price-${idx}" class="input-field" style="margin:0; width:80px;">
                 </div>
@@ -405,7 +418,6 @@ const app = {
             this.state.services[idx].icon = icon;
             this.updateServicesStorage();
             this.closeModal('modal-icons');
-            // Re-renderiza a aba de serviços para mostrar o novo ícone
             this.switchTab('services');
         }
     },
