@@ -1,5 +1,4 @@
-<!-- maked by rocha-->
-
+<!-- maked by rafael rocha -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -14,7 +13,7 @@
 
     <header class="navbar">
         <div class="brand-wrapper">
-            <img src="logo.jpg" alt="Logo Pantera" class="logo-img">
+            <img src="logo.png" alt="Logo Pantera" class="logo-img">
             <div class="brand-text">
                 PANTERA <span class="text-accent">BARBERSHOP</span>
             </div>
@@ -30,7 +29,7 @@
 
     <main class="container">
         <section class="hero">
-            <h1>Agende<br>Já!</h1>
+            <h1>Seu estilo,<br>nossa assinatura.</h1>
             <p class="subtitle">Agende seu horário com exclusividade.</p>
             
             <div id="user-status-card" class="user-status hidden">
@@ -45,6 +44,7 @@
         <section id="services-grid" class="services-container"></section>
     </main>
 
+    <!-- Modal Booking -->
     <div id="modal-booking" class="modal-overlay hidden">
         <div class="modal-card">
             <div class="modal-header">
@@ -74,6 +74,7 @@
         </div>
     </div>
 
+    <!-- Modal Admin -->
     <div id="modal-admin" class="modal-overlay hidden">
         <div class="modal-card">
             <div class="modal-header">
@@ -101,6 +102,20 @@
         </div>
     </div>
 
+    <!-- Modal Seletor de Ícones (NOVO) -->
+    <div id="modal-icons" class="modal-overlay hidden" style="z-index: 250;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Escolher Ícone</h3>
+                <button class="btn-close" onclick="app.closeModal('modal-icons')">&times;</button>
+            </div>
+            <div id="icons-grid" class="icons-grid">
+                <!-- Ícones gerados via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Dialog -->
     <div id="modal-dialog" class="modal-overlay hidden" style="z-index: 300;">
         <div class="modal-card" style="max-width: 350px; text-align: center;">
             <div style="margin-bottom: 20px;">
