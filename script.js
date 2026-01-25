@@ -1,5 +1,6 @@
+// maked by rafael rocha
+
 const app = {
-    // Dados Iniciais
     defaultServices: [
         { id: 1, name: 'Corte de Cabelo', price: 30, icon: 'fa-scissors' },
         { id: 2, name: 'Barba Terapia', price: 30, icon: 'fa-face-smile' },
@@ -14,31 +15,59 @@ const app = {
         config: {},
         currentSelection: {},
         theme: 'light',
-        userBookingId: null, // "IP" do usuário (ID salvo no navegador)
-        isAdminLoggedIn: false // Persistência do Admin
+        userBookingId: null,
+        isAdminLoggedIn: false
     },
 
     init: function() {
-        // 1. Carregar Dados
+        // Inicializa proteção contra inspeção
+        this.initProtection();
+
         this.state.services = JSON.parse(localStorage.getItem('pantera_services')) || this.defaultServices;
         this.state.bookings = JSON.parse(localStorage.getItem('pantera_bookings')) || [];
         this.state.config = JSON.parse(localStorage.getItem('pantera_config')) || { whatsapp: '5511999999999' };
         
-        // 2. Carregar Estado do Usuário e Admin
         this.state.userBookingId = localStorage.getItem('pantera_user_booking_id');
         this.state.isAdminLoggedIn = localStorage.getItem('pantera_admin_logged_in') === 'true';
         
-        // 3. Tema
         const savedTheme = localStorage.getItem('pantera_theme') || 'light';
         this.setTheme(savedTheme);
 
-        // 4. Renderizar UI
         this.renderServices();
         this.checkUserStatus();
         this.updateAdminButton();
     },
 
-    // --- TEMA ---
+    // --- PROTEÇÃO CONTRA INSPEÇÃO ---
+    initProtection: function() {
+        // Bloquear botão direito
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Bloquear atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U, etc)
+        document.onkeydown = function(e) {
+            // F12
+            if(e.keyCode == 123) {
+                return false;
+            }
+            // Ctrl+Shift+I (Inspetor)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+Shift+J (Console)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+Shift+C (Elemento)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+U (Ver Fonte)
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+                return false;
+            }
+        }
+    },
+
     toggleTheme: function() {
         this.setTheme(this.state.theme === 'light' ? 'dark' : 'light');
     },
@@ -49,7 +78,6 @@ const app = {
         document.getElementById('theme-icon').className = themeName === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
     },
 
-    // --- SISTEMA DE DIÁLOGO CUSTOMIZADO (Substitui Alert/Confirm) ---
     showDialog: function(title, message, type, onConfirm) {
         const modal = document.getElementById('modal-dialog');
         document.getElementById('dialog-title').innerText = title;
@@ -59,7 +87,6 @@ const app = {
         const btnConfirm = document.getElementById('btn-dialog-confirm');
         const btnCancel = document.getElementById('btn-dialog-cancel');
 
-        // Configuração visual baseada no tipo
         if (type === 'danger') {
             icon.className = 'fa-solid fa-triangle-exclamation';
             icon.style.color = 'var(--danger)';
@@ -70,9 +97,8 @@ const app = {
             icon.style.color = 'var(--accent)';
             btnConfirm.style.background = 'var(--text-main)';
             btnConfirm.innerText = 'OK';
-            btnCancel.style.display = 'none'; // Apenas OK
+            btnCancel.style.display = 'none';
         } else {
-            // Confirm padrão
             icon.className = 'fa-solid fa-circle-question';
             icon.style.color = 'var(--accent)';
             btnConfirm.style.background = 'var(--text-main)';
@@ -82,7 +108,6 @@ const app = {
 
         modal.classList.remove('hidden');
 
-        // Handlers
         btnConfirm.onclick = () => {
             modal.classList.add('hidden');
             if (onConfirm) onConfirm();
@@ -92,20 +117,17 @@ const app = {
         };
     },
 
-    // --- STATUS DO USUÁRIO ---
     checkUserStatus: function() {
         const statusCard = document.getElementById('user-status-card');
         const details = document.getElementById('user-booking-details');
 
         if (this.state.userBookingId) {
-            // Procura o agendamento real na lista
             const booking = this.state.bookings.find(b => b.id == this.state.userBookingId);
             
             if (booking) {
                 statusCard.classList.remove('hidden');
                 details.innerText = `${booking.service} - ${booking.date} às ${booking.time}`;
             } else {
-                // Se o ID existe no usuário mas não na lista (foi deletado pelo admin), limpa.
                 localStorage.removeItem('pantera_user_booking_id');
                 this.state.userBookingId = null;
                 statusCard.classList.add('hidden');
@@ -121,11 +143,9 @@ const app = {
             'Tem certeza que deseja cancelar seu horário? Isso liberará a vaga para outros.',
             'danger',
             () => {
-                // Remover do array global
                 this.state.bookings = this.state.bookings.filter(b => b.id != this.state.userBookingId);
                 localStorage.setItem('pantera_bookings', JSON.stringify(this.state.bookings));
                 
-                // Limpar "IP" do usuário
                 localStorage.removeItem('pantera_user_booking_id');
                 this.state.userBookingId = null;
                 
@@ -135,7 +155,6 @@ const app = {
         );
     },
 
-    // --- RENDERIZAÇÃO DE SERVIÇOS ---
     renderServices: function() {
         const grid = document.getElementById('services-grid');
         grid.innerHTML = '';
@@ -153,7 +172,6 @@ const app = {
     },
 
     handleServiceClick: function(service) {
-        // Bloqueia se já tiver agendamento
         if (this.state.userBookingId) {
             this.showDialog('Atenção', 'Você já possui um horário marcado. Cancele o atual para agendar um novo.', 'info');
             return;
@@ -161,7 +179,6 @@ const app = {
         this.openBooking(service);
     },
 
-    // --- AGENDAMENTO ---
     openBooking: function(service) {
         this.state.currentSelection.service = service;
         document.getElementById('modal-title').innerText = service.name;
@@ -246,22 +263,18 @@ const app = {
             clientPhone: phone
         };
         
-        // Salva booking global
         this.state.bookings.push(booking);
         localStorage.setItem('pantera_bookings', JSON.stringify(this.state.bookings));
         
-        // Salva "IP" do usuário
         this.state.userBookingId = bookingId;
         localStorage.setItem('pantera_user_booking_id', bookingId);
 
-        // Enviar WhatsApp
         const link = `https://wa.me/${this.state.config.whatsapp}?text=Agendamento: ${booking.service} - ${booking.date} às ${booking.time}. Cliente: ${name}`;
         window.open(link, '_blank');
         
         location.reload();
     },
 
-    // --- ADMIN ---
     handleAdminClick: function() {
         const modal = document.getElementById('modal-admin');
         modal.classList.remove('hidden');
@@ -269,7 +282,7 @@ const app = {
         if(this.state.isAdminLoggedIn) {
             document.getElementById('admin-login-view').classList.add('hidden');
             document.getElementById('admin-panel-view').classList.remove('hidden');
-            this.switchTab('bookings'); // Aba padrão
+            this.switchTab('bookings');
         } else {
             document.getElementById('admin-login-view').classList.remove('hidden');
             document.getElementById('admin-panel-view').classList.add('hidden');
@@ -282,7 +295,7 @@ const app = {
 
         if(u === 'panteraadm1' && p === 'pantera1') {
             this.state.isAdminLoggedIn = true;
-            localStorage.setItem('pantera_admin_logged_in', 'true'); // Persistência
+            localStorage.setItem('pantera_admin_logged_in', 'true');
             
             document.getElementById('admin-login-view').classList.add('hidden');
             document.getElementById('admin-panel-view').classList.remove('hidden');
@@ -320,7 +333,6 @@ const app = {
         if(tab === 'config') this.renderAdminConfig(content);
     },
 
-    // 1. Admin Agenda
     renderAdminBookings: function(container) {
         const sorted = this.state.bookings.sort((a,b) => b.id - a.id);
         if(sorted.length === 0) return container.innerHTML = '<p style="text-align:center; color:var(--text-muted)">Sem agendamentos.</p>';
@@ -344,12 +356,10 @@ const app = {
         this.showDialog('Excluir Agendamento', 'Tem certeza? O cliente perderá a reserva.', 'danger', () => {
             this.state.bookings = this.state.bookings.filter(b => b.id !== id);
             localStorage.setItem('pantera_bookings', JSON.stringify(this.state.bookings));
-            // Se o admin apaga, libera o "IP" do usuário se ele recarregar a página
             this.switchTab('bookings');
         });
     },
 
-    // 2. Admin Serviços
     renderAdminServices: function(container) {
         this.state.services.forEach((s, idx) => {
             const item = document.createElement('div');
@@ -368,7 +378,6 @@ const app = {
             container.appendChild(item);
         });
 
-        // Adicionar Novo
         const addDiv = document.createElement('div');
         addDiv.style.marginTop = '20px';
         addDiv.innerHTML = `
@@ -411,7 +420,6 @@ const app = {
         this.renderServices();
     },
 
-    // 3. Admin Config
     renderAdminConfig: function(container) {
         container.innerHTML = `
             <p style="margin-bottom:10px;">Número WhatsApp (somente números, com DDD):</p>
@@ -428,5 +436,4 @@ const app = {
     }
 };
 
-// Iniciar
 document.addEventListener('DOMContentLoaded', () => app.init());
