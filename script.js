@@ -1,6 +1,13 @@
 // maked by rafael rocha
 
 const app = {
+    // Lista de ícones disponíveis para o admin
+    availableIcons: [
+        'fa-scissors', 'fa-face-smile', 'fa-user-tie', 'fa-eye', 'fa-spray-can',
+        'fa-mask', 'fa-hand-sparkles', 'fa-bolt', 'fa-star', 'fa-crown',
+        'fa-wand-magic-sparkles', 'fa-fire', 'fa-gem', 'fa-feather', 'fa-circle-check'
+    ],
+
     defaultServices: [
         { id: 1, name: 'Corte de Cabelo', price: 30, icon: 'fa-scissors' },
         { id: 2, name: 'Barba Terapia', price: 30, icon: 'fa-face-smile' },
@@ -16,11 +23,11 @@ const app = {
         currentSelection: {},
         theme: 'light',
         userBookingId: null,
-        isAdminLoggedIn: false
+        isAdminLoggedIn: false,
+        editingServiceIndex: null // Para saber qual serviço está mudando de ícone
     },
 
     init: function() {
-        // Inicializa proteção contra inspeção
         this.initProtection();
 
         this.state.services = JSON.parse(localStorage.getItem('pantera_services')) || this.defaultServices;
@@ -38,33 +45,12 @@ const app = {
         this.updateAdminButton();
     },
 
-    // --- PROTEÇÃO CONTRA INSPEÇÃO ---
     initProtection: function() {
-        // Bloquear botão direito
         document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // Bloquear atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U, etc)
         document.onkeydown = function(e) {
-            // F12
-            if(e.keyCode == 123) {
-                return false;
-            }
-            // Ctrl+Shift+I (Inspetor)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
-                return false;
-            }
-            // Ctrl+Shift+J (Console)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
-                return false;
-            }
-            // Ctrl+Shift+C (Elemento)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
-                return false;
-            }
-            // Ctrl+U (Ver Fonte)
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
-                return false;
-            }
+            if(e.keyCode == 123) return false;
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false;
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
         }
     },
 
@@ -360,13 +346,20 @@ const app = {
         });
     },
 
+    // --- NOVA LOGICA DE ICONES ---
+    
     renderAdminServices: function(container) {
         this.state.services.forEach((s, idx) => {
             const item = document.createElement('div');
             item.className = 'admin-item';
             item.innerHTML = `
                 <div style="margin-bottom:10px; font-weight:600;">${s.name}</div>
-                <div style="display:flex; gap:10px;">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <!-- Botão de Ícone -->
+                    <button class="btn-icon-select" onclick="app.openIconSelector(${idx})">
+                        <i class="fa-solid ${s.icon || 'fa-cut'}"></i>
+                    </button>
+                    
                     <input type="text" value="${s.name}" id="edit-name-${idx}" class="input-field" style="margin:0;">
                     <input type="number" value="${s.price}" id="edit-price-${idx}" class="input-field" style="margin:0; width:80px;">
                 </div>
@@ -389,6 +382,34 @@ const app = {
         container.appendChild(addDiv);
     },
 
+    openIconSelector: function(serviceIdx) {
+        this.state.editingServiceIndex = serviceIdx;
+        const modal = document.getElementById('modal-icons');
+        const grid = document.getElementById('icons-grid');
+        grid.innerHTML = '';
+        
+        this.availableIcons.forEach(icon => {
+            const div = document.createElement('div');
+            div.className = 'icon-option';
+            div.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+            div.onclick = () => app.selectIcon(icon);
+            grid.appendChild(div);
+        });
+
+        modal.classList.remove('hidden');
+    },
+
+    selectIcon: function(icon) {
+        const idx = this.state.editingServiceIndex;
+        if(idx !== null && this.state.services[idx]) {
+            this.state.services[idx].icon = icon;
+            this.updateServicesStorage();
+            this.closeModal('modal-icons');
+            // Re-renderiza a aba de serviços para mostrar o novo ícone
+            this.switchTab('services');
+        }
+    },
+
     saveService: function(idx) {
         const name = document.getElementById(`edit-name-${idx}`).value;
         const price = document.getElementById(`edit-price-${idx}`).value;
@@ -409,7 +430,7 @@ const app = {
         const name = document.getElementById('new-name').value;
         const price = document.getElementById('new-price').value;
         if(name && price) {
-            this.state.services.push({ id: Date.now(), name, price, icon: 'fa-cut' });
+            this.state.services.push({ id: Date.now(), name, price, icon: 'fa-scissors' });
             this.updateServicesStorage();
             this.switchTab('services');
         }
